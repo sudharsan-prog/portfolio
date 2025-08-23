@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My 3D Portfolio</title>
+  <meta name="description" content="3D-themed portfolio with Three.js background and glassmorphism UI." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f18;
+      --bg2: #111827;
+      --fg: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #60a5fa;
+      --glass: rgba(255,255,255,0.07);
+      --glass-strong: rgba(255,255,255,0.12);
+      --border: rgba(255,255,255,0.15);
+      --shadow: 0 10px 30px rgba(0,0,0,0.45);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--fg);
+      background: radial-gradient(1200px 800px at 10% 10%, #0f172a 0%, var(--bg) 40%),
+                  radial-gradient(800px 600px at 90% 20%, #111827 0%, var(--bg) 50%),
+                  var(--bg);
+      overflow-x: hidden;
+    }
+
+    /* THREE canvas sits behind everything */
+    #bg {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: -1;
+    }
+
+    /* top nav */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+      background: linear-gradient(to bottom, rgba(11,15,24,0.75), rgba(11,15,24,0.3));
+      border-bottom: 1px solid var(--border);
+    }
+    .nav {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+    }
+    .logo {
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      font-size: 1.1rem;
+    }
+    .nav a {
+      color: var(--fg);
+      text-decoration: none;
+      margin-left: 16px;
+      font-weight: 600;
+      opacity: 0.85;
+    }
+    .nav a:hover { opacity: 1; }
+
+    /* sections */
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 28px 20px 80px; }
+    section { padding: 64px 0; }
+    h1, h2, h3 { margin: 0 0 16px; }
+    h1 { font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.05; }
+    h2 { font-size: clamp(1.4rem, 3vw, 2rem); opacity: 0.95; }
+    p { color: var(--muted); line-height: 1.7; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 28px;
+      align-items: center;
+    }
+    .tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      padding: 8px 12px; border-radius: 999px; font-weight: 600;
+      box-shadow: var(--shadow);
+    }
+    .cta {
+      display: flex; gap: 12px; margin-top: 22px; flex-wrap: wrap;
+    }
+    .btn {
+      appearance: none; border: 1px solid var(--border); color: var(--fg);
+      background: var(--glass-strong);
+      padding: 12px 16px; border-radius: 14px; font-weight: 700; cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+      box-shadow: var(--shadow);
+    }
+    .btn:hover { transform: translateY(-2px); background: rgba(255,255,255,0.16); }
+    .btn.primary { border-color: transparent; background: linear-gradient(135deg, #60a5fa, #a78bfa); color: #0b0f18; }
+    .btn.primary:hover { filter: brightness(1.05); }
+
+    .glass {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    /* projects grid */
+    .grid {
+      display: grid; gap: 18px;
+      grid-template-columns: repeat(12, 1fr);
+    }
+    .card { grid-column: span 12; }
+    @media (min-width: 720px) { .card { grid-column: span 6; } }
+    @media (min-width: 1040px) { .card { grid-column: span 4; } }
+
+    .project {
+      display: flex; flex-direction: column; gap: 12px; min-height: 220px;
+      transform-style: preserve-3d; perspective: 800px;
+    }
+    .project h3 { font-size: 1.1rem; }
+    .project .meta { color: var(--muted); font-size: 0.95rem; }
+
+    .chip {
+      display: inline-flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .chip span{
+      background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.25);
+      padding: 6px 10px; border-radius: 999px; font-size: 0.85rem; color: #cfe4ff;
+    }
+
+    /* about section */
+    .about {
+      display: grid; gap: 20px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 900px){
+      .about { grid-template-columns: 1fr 1fr; }
+      .skills-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 14px;
+  
+}
+.edu-item {
+  margin-bottom: 15px;
+}
+
+.edu-item h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.edu-item p {
+  margin: 3px 0;
+  font-size: 0.95rem;
+  color: #ccc;
+}
+
+.edu-item span {
+  font-size: 0.85rem;
+  color: #aaa;
+}
+
+/* Skills Section */
+.skills {
+  background: #1e1f25;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+  margin: 50px auto;
+  max-width: 900px;
+}
+
+.skills h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+.category h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 20px 0 15px;
+  color: #ccc;
+}
+
+.skills-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+/* Skill bubbles */
+.skill {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #4c4966, #ac9a9a61);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.495);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: float 4s ease-in-out infinite, popIn 0.6s forwards;
+  opacity: 0;
+}
+
+/* Hover Glow */
+.skill:hover {
+  transform: translateY(-12px) scale(1.1) rotate(5deg);
+  box-shadow: 0 0 20px rgba(255, 107, 107, 0.8), 
+              0 0 40px rgba(255, 59, 59, 0.6);
+}
+
+/* Floating Animation */
+@keyframes float {
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+/* Pop-in Animation */
+@keyframes popIn {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Delay for each skill bubble */
+.skills-grid .skill:nth-child(1) { animation-delay: 0.2s; }
+.skills-grid .skill:nth-child(2) { animation-delay: 0.4s; }
+.skills-grid .skill:nth-child(3) { animation-delay: 0.6s; }
+.skills-grid .skill:nth-child(4) { animation-delay: 0.8s; }
+.skills-grid .skill:nth-child(5) { animation-delay: 1s; }
+.skills-grid .skill:nth-child(6) { animation-delay: 1.2s; }
+
+
+    }
+
+    /* contact */
+    form {
+      display: grid; gap: 12px; max-width: 640px;
+    }
+    input, textarea {
+      width: 100%; padding: 12px 14px; border-radius: 12px;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--fg);
+      outline: none; transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    input:focus, textarea:focus { border-color: #60a5fa; box-shadow: 0 0 0 3px rgba(96,165,250,0.2); }
+    textarea { min-height: 140px; resize: vertical; }
+
+    /* foot */
+    footer { color: var(--muted); padding: 24px 0 60px; text-align: center; }
+
+    /* animations */
+    .reveal { opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.show { opacity: 1; transform: translateY(0); }
+
+    /* 3D hover for cards */
+    .tilt { will-change: transform; }
+
+    /* utility */
+    .spacer { height: 18px; }
+
+
+  </style>
+</head>
+<body>
+  <noscript>This site uses JavaScript for 3D visuals and animations.</noscript>
+  <canvas id="bg"></canvas>
+
+  <header>
+    <nav class="nav">
+      <div class="logo">&lt;SUDHARSAN &gt;</div>
+      <div>
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#projects">Projects</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section id="home" class="hero">
+      <div>
+        <div class="tag">Sudharsan Portfolio</div>
+        <h1 style="margin-top:12px">Hi, I'm <span style="color:#93c5fd">SUDHARSAN S</span> --I build delightful web Portfolio </h1>
+        <p>Data Analyst & Data Engineer turning raw data into impactful insights and dashboards..
+        </p>
+        <div class="cta">
+          <a class="btn primary" href="#projects">View Projects</a>
+          <button class="btn" id="copyEmailBtn" title="Copy email to clipboard">Copy Email</button>
+        </div>
+      </div>
+      <div class="glass reveal" style="min-height:280px">
+        <h2>Quick Facts</h2>
+        <p>• 2.5+ years in Data Analytics & BI <br/>• Skilled in SQL,Power BI,Excel,Python <br/>• Experienced with Azure Synapse & Data Lake <br/>• Improved efficiency & engagement by 40%</p>
+        <div class="chip">
+          <span>#Data Visualization & Reporting  </span><span>#Power Bi</span><span>#Sql</span><span>#Excel</span><span>#Python</span><span>#Alteryx</span>
+        </div>
+      </div>
+    </section>
+    
+    
+    <section id="about" class="about">
+      <div class="glass reveal">
+        <h2>About Me</h2>
+        <p> I am a results-driven Data Analyst and Data engineer with 2.5+ years of experience in SQL, Python, Alteryx, Power BI, and Tableau. 
+    Skilled in ETL development, data modeling, and KPI reporting, I specialize in transforming raw data into actionable insights that drive business growth. 
+    My expertise includes working with Azure Synapse and Azure Data Lake for big data processing, building interactive dashboards, and optimizing workflows 
+    that improve efficiency and reduce manual effort. Passionate about solving complex business challenges, I thrive on delivering data solutions that 
+    empower informed decision-making and measurable impact.</p>
+      </div>
+      <div class="glass reveal">
+        <h2>Education</h2>
+  <div class="edu-item">
+    <h3>MCA - Master of Computer Applications</h3>
+    <p>Srm University, Chennai, Tamil Nadu</p>
+    <span>Jan 2023 – Jan 2025</span>
+  </div>
+  <div class="edu-item">
+    <h3>B.Sc CT - Bachelor of Science in Computer Technology</h3>
+    <p>Sri Krishna Adhitya College of Arts and Science, Coimbatore, Tamil Nadu</p>
+    <span>June 2019 – July 2022</span>
+  </div>
+  <div class="edu-item">
+    <h3>Higher Secondary Education</h3>
+    <p>Rk Shree Rangammal Kalvi Nilayam</p>
+    <span>2017 – 2019</span>
+  </div>
+</div>
+    </section>
+
+    <!-- 🌟 Skills Section -->
+<section class="skills">
+  <h2>Skills</h2>
+
+  <div class="category">
+    <h3>Data Analysis & Visualization</h3>
+    <div class="skills-grid">
+      <div class="skill">Python</div>
+      <div class="skill">Excel</div>
+      <div class="skill">Power BI</div>
+      <div class="skill">Tableau</div>
+      <div class="skill">Alteryx</div>
+    </div>
+  </div>
+
+  <div class="category">
+    <h3>Cloud Platforms</h3>
+    <div class="skills-grid">
+      <div class="skill">Azure</div>
+    </div>
+  </div>
+</section>
+
+
+    <section id="projects">
+  <h2 class="reveal">Featured Projects</h2>
+  <div class="spacer"></div>
+  <div class="grid">
+
+    <!-- Power BI -->
+    <div class="card reveal">
+      <div class="glass project tilt">
+        <h3>Power BI Projects</h3>
+        <p class="meta">Interactive dashboards & analytics.</p>
+        <ul style="margin:0; padding-left:18px; line-height:1.6;">
+          <li><a href="https://github.com/sudharsan-prog/Powerbi_Sales_Dashboard" target="_blank">Shopify Sales Dashboard</a></li>
+          <li><a href="https://github.com/sudharsan-prog/Hr-Analysis-Dashboard" target="_blank">HR Analysis Report</a></li>
+        </ul>
+        <div class="chip"><span>Power BI</span><span>Data Viz</span><span>Business Insights</span></div>
+      </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="card reveal">
+      <div class="glass project tilt">
+        <h3>Tableau Projects</h3>
+        <p class="meta">Coming soon...</p>
+        <div class="chip"><span>Tableau</span><span>KPIs</span></div>
+      </div>
+    </div>
+
+    <!-- Looker -->
+    <div class="card reveal">
+      <div class="glass project tilt">
+        <h3>Looker Projects</h3>
+        <p class="meta">Coming soon...</p>
+        <div class="chip"><span>Looker</span><span>Analytics</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+    <footer>
+      © <span id="year"></span> SUDHARSAN S
+    </footer>
+  </main>
+
+  <!-- Three.js & helpers -->
+  <script src="https://unpkg.com/three@0.161.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/vanilla-tilt@1.8.1/dist/vanilla-tilt.min.js"></script>
+
+  <script>
+    // ===== Utility =====
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
+    const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+
+    // ===== Copy email button =====
+    const EMAIL = 'sudar9600@gmail.com';
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.id === 'copyEmailBtn') {
+        navigator.clipboard.writeText(EMAIL).then(() => {
+          e.target.textContent = 'Copied!';
+          setTimeout(() => (e.target.textContent = 'Copy Email'), 1500);
+        });
+      }
+    });
+
+    // ===== Smooth scroll for internal links =====
+    $$('.nav a').forEach(a => {
+      a.addEventListener('click', (e) => {
+        const href = a.getAttribute('href');
+        if (href && href.startsWith('#')) {
+          e.preventDefault();
+          document.querySelector(href).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // ===== Reveal on scroll =====
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('show');
+      });
+    }, { threshold: 0.12 });
+    $$('.reveal').forEach(el => observer.observe(el));
+
+    // ===== 3D Background with Three.js =====
+    let scene, camera, renderer, starField, coreMesh, frame = 0;
+    const canvas = document.getElementById('bg');
+
+    function init3D() {
+      scene = new THREE.Scene();
+
+      const fov = 60;
+      const aspect = window.innerWidth / window.innerHeight;
+      camera = new THREE.PerspectiveCamera(fov, aspect, 0.1, 2000);
+      camera.position.set(0, 0, 8);
+
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      // Lights
+      const amb = new THREE.AmbientLight(0xffffff, 0.6);
+      const key = new THREE.PointLight(0x88aaff, 8, 40);
+      key.position.set(5, 5, 8);
+      const rim = new THREE.PointLight(0xff88aa, 6, 40);
+      rim.position.set(-6, -2, -2);
+      scene.add(amb, key, rim);
+
+      // Core object — low-poly icosahedron
+      const geo = new THREE.IcosahedronGeometry(2.2, 1);
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x8ab4ff,
+        roughness: 0.25,
+        metalness: 0.65,
+        emissive: 0x0a1020,
+        envMapIntensity: 1.0
+      });
+      coreMesh = new THREE.Mesh(geo, mat);
+      scene.add(coreMesh);
+
+      // Subtle wireframe overlay
+      const wire = new THREE.WireframeGeometry(geo);
+      const line = new THREE.LineSegments(wire, new THREE.LineBasicMaterial({ color: 0x335bff, opacity: 0.25, transparent: true }));
+      coreMesh.add(line);
+
+      // Starfield
+      const starCount = 1500;
+      const pos = new Float32Array(starCount * 3);
+      for (let i = 0; i < starCount; i++) {
+        const r = THREE.MathUtils.randFloat(30, 120);
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(THREE.MathUtils.randFloatSpread(2));
+        const x = r * Math.sin(phi) * Math.cos(theta);
+        const y = r * Math.sin(phi) * Math.sin(theta);
+        const z = r * Math.cos(phi);
+        pos.set([x, y, z], i * 3);
+      }
+      const starGeo = new THREE.BufferGeometry();
+      starGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const starMat = new THREE.PointsMaterial({ size: 0.6, sizeAttenuation: true, transparent: true, opacity: 0.8 });
+      starField = new THREE.Points(starGeo, starMat);
+      scene.add(starField);
+
+      // Handle resize
+      window.addEventListener('resize', onResize);
+      window.addEventListener('mousemove', onMouseMove);
+
+      animate();
+    }
+
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // Parallax with mouse
+    const mouse = { x: 0, y: 0 };
+    function onMouseMove(e) {
+      const x = (e.clientX / window.innerWidth) * 2 - 1;
+      const y = (e.clientY / window.innerHeight) * 2 - 1;
+      mouse.x = x; mouse.y = y;
+    }
+
+    function animate() {
+      frame++;
+      const t = frame * 0.005;
+      requestAnimationFrame(animate);
+
+      // gentle rotation + breathing scale
+      coreMesh.rotation.x += 0.003;
+      coreMesh.rotation.y += 0.004;
+      const s = 1 + Math.sin(t) * 0.03;
+      coreMesh.scale.setScalar(s);
+
+      // subtle star drift
+      starField.rotation.y -= 0.0006;
+
+      // camera parallax
+      camera.position.x += (mouse.x * 0.8 - camera.position.x) * 0.05;
+      camera.position.y += (-mouse.y * 0.6 - camera.position.y) * 0.05;
+      camera.lookAt(0,0,0);
+
+      renderer.render(scene, camera);
+    }
+
+    init3D();
+
+    // ===== Form handling (demo only) =====
+    function handleSubmit(e){
+      e.preventDefault();
+      const name = $('#name').value.trim();
+      const email = $('#email').value.trim();
+      const message = $('#message').value.trim();
+      const payload = { name, email, message, at: new Date().toISOString() };
+      console.log('Form payload', payload);
+      alert('Thanks! This demo doesn\'t send yet, but your message is copied to console.');
+      e.target.reset();
+    }
+
+    // ===== VanillaTilt for project cards =====
+    VanillaTilt.init($$('.tilt'), {
+      max: 10,
+      speed: 400,
+      glare: true,
+      'max-glare': 0.2,
+      scale: 1.02,
+      perspective: 900
+    });
+
+    // ===== Footer year =====
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+  
+</body>
+</html>
