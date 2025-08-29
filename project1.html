@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projects - Sudharsan</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background: #0a0f1f;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 30px;
+      font-size: 2rem;
+      text-shadow: 0 0 10px cyan, 0 0 20px cyan;
+    }
+
+    h2 {
+      margin-top: 40px;
+      font-size: 1.5rem;
+      text-shadow: 0 0 8px cyan;
+    }
+
+    .projects-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      padding: 20px 40px;
+      justify-items: center;
+    }
+
+    .card {
+      background: #111;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+      width: 280px;
+      transition: transform 0.3s ease-in-out, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 0 25px cyan, 0 0 40px cyan;
+    }
+
+    .card img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    .glow-button {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 10px 20px;
+      color: cyan;
+      border: 1px solid cyan;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.3s;
+      box-shadow: 0 0 15px cyan;
+      cursor: pointer;
+    }
+
+    .glow-button:hover {
+      background: cyan;
+      color: black;
+      box-shadow: 0 0 25px cyan, 0 0 40px cyan;
+    }
+
+    .coming-soon {
+      height: 150px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: gray;
+      border: 1px dashed cyan;
+      border-radius: 12px;
+    }
+
+    /* Modal popup */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.8);
+    }
+
+    .modal-content {
+      background-color: #0a0f1f;
+      margin: 5% auto;
+      padding: 20px;
+      border: 2px solid cyan;
+      border-radius: 15px;
+      width: 80%;
+      max-width: 900px;
+      text-align: center;
+      box-shadow: 0 0 25px cyan, 0 0 40px cyan;
+    }
+
+    .modal-content img {
+      max-width: 100%;
+      border-radius: 10px;
+    }
+
+    .close {
+      color: white;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Projects</h1>
+
+  <!-- Power BI Section -->
+  <h2>Power BI Dashboards</h2>
+  <div class="projects-container">
+    <div class="card">
+      <img src="shopify.png" alt="Shopify Dashboard" />
+      <button class="glow-button" onclick="openModal('shopify.png')">View Dashboard & Report</button>
+    </div>
+    <div class="card">
+      <img src="Hr.png" alt="HR Dashboard" />
+      <button class="glow-button" onclick="openModal('Hr.png')">View Dashboard & Report</button>
+    </div>
+  </div>
+
+  <!-- Tableau Section -->
+  <h2>Tableau Dashboards</h2>
+  <div class="projects-container">
+    <div class="card coming-soon">Coming Soon</div>
+  </div>
+
+  <!-- Looker Section -->
+  <h2>Looker Dashboards</h2>
+  <div class="projects-container">
+    <div class="card coming-soon">Coming Soon</div>
+  </div>
+
+  <a href="index.html" class="glow-button">⬅ Back to Home</a>
+
+  <!-- Modal -->
+  <div id="dashboardModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2>Dashboard Preview</h2>
+      <img id="modalImage" src="" alt="Dashboard Preview" />
+    </div>
+  </div>
+
+  <script>
+    function openModal(imageSrc) {
+      document.getElementById("modalImage").src = imageSrc;
+      document.getElementById("dashboardModal").style.display = "block";
+    }
+
+    function closeModal() {
+      document.getElementById("dashboardModal").style.display = "none";
+    }
+
+    window.onclick = function(event) {
+      let modal = document.getElementById("dashboardModal");
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
+  </script>
+</body>
+</html>
